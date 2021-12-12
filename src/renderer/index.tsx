@@ -12,6 +12,9 @@ let appTheme = createTheme({
   components:{
     MuiCssBaseline:{
       styleOverrides: {
+        body: {
+          overflow: 'hidden'
+        },
         "&::-webkit-scrollbar" : {
           width: '10px'
         },
@@ -42,7 +45,7 @@ let appTheme = createTheme({
 //    },
     action: {
       selected: '#E6F5FF', //'rgba(0, 118, 210, 0.08)', //'#d6f6dd',
-      hover: '#E6F5FF35', //'rgba(0, 118, 210, 0.03)', //'rgba(40, 140, 140, 0.02)',
+      hover: '#E6F5FF55', //'rgba(0, 118, 210, 0.03)', //'rgba(40, 140, 140, 0.02)',
     }
   },
 

@@ -1,6 +1,7 @@
 import { IActionItem } from "main/entity/IActoinItem";
 import { INotification } from "main/entity/INotification";
 import { ITickerInfo } from "main/entity/ITickerInfo";
+import {SystemCommand} from "main/entity/SystemCommand";
 
 
 declare global {
@@ -14,6 +15,7 @@ export interface Electron {
 }
 
 export interface IpcRenderer {
+  systemCommand(command: SystemCommand): void;
   importOperations(): void;
   loadPortfolio(): void;
   refreshPortfolio(): void;

@@ -1,23 +1,26 @@
-import { Paper, styled, Typography } from '@mui/material';
+import {  styled, Typography } from '@mui/material';
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
 import { summarySelector } from 'renderer/state/atom';
+
 import { formatMoney, formatPercent } from '../utils/SystemExtentions';
 
-const SummaryPaper = styled(Paper)`
-  display: flex;
-  flex-direction: row;
-  background-color: black;
-  padding: ${p => p.theme.spacing(1)};
-  padding-right: 0;
-  margin: 1px;
-`;
+const InfoContainer = styled('div')(({theme}) => ({
+  WebkitAppRegion:'drag',
+  display: 'flex',
+  flexDirection:'row',
+  '& > :last-child': {
+    marginRight: '0px'
+  },
+  backgroundColor: theme.palette.grey[500],
+}));
 
 const NormalNumber = styled(Typography)`
   color: ${p => p.theme.palette.background.default};
   font-weight: bold;
   margin-right: 10px;
   margin-left: auto;
+  margin-bottom: 8px;
 `;
 
 const ColoredNumber = styled(NormalNumber)<{ value: number }>`
@@ -31,21 +34,27 @@ const SumTitle = styled(Typography)(({theme}) => ({
   color: theme.palette.background.default,
   fontWeight: 'bold',
   lineHeight: '40px',
-  margin: '15px'
+  marginTop: theme.spacing(3)
 }));
 
-const InfoBox = styled('div', {
-  shouldForwardProp: (prop) => prop !== 'noBorder',
-})<{ noBorder?: boolean }>(({ theme, noBorder }) => ({
+const InfoBox = styled('div')(() => ({
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
   minWidth: '210px',
-  height: '150px',
-  borderRight: (noBorder ? '' : `1px solid ${theme.palette.grey[700]}`),
+  height: '180px',
   padding: '5px',
   alignItems: 'center',
   alignSelf: 'stretch',
+  backgroundColor: '#000000',
+  marginRight: '1px',
+}));
+
+const Caption = styled(Typography)(({theme}) =>({
+  color: theme.palette.grey[500], //'#FFFFFF',
+  lineHeight: 1,
+  marginLeft:'auto',
+  marginRight: '10px',
 }));
 
 export const SummaryDetail: FC = () => {
@@ -53,37 +62,44 @@ export const SummaryDetail: FC = () => {
   const summary = useRecoilValue(summarySelector);
 
   return (
-    <SummaryPaper variant='outlined' >
+    <InfoContainer>
+
       <InfoBox>
-        <SumTitle variant='h5'> Invested </SumTitle>
+        <SumTitle variant='h5'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assets </SumTitle>
+        <Caption variant='caption'>invested</Caption>
         <NormalNumber variant='h5'>{summary.invested.formatMoney()}</NormalNumber>
       </InfoBox>
       <InfoBox>
         <SumTitle variant='h5'> Unrealized PnL </SumTitle>
-          <ColoredNumber variant='h5' value={summary.unrealizedPnL}>
-            {formatMoney(summary.unrealizedPnL)}
-          </ColoredNumber>
-          <ColoredNumber variant='h5' value={summary.unrealizedPnL}>
-            {formatPercent(summary.unrealizedPnLPercent)}
-          </ColoredNumber>
+        <Caption variant='caption'>total</Caption>
+        <ColoredNumber variant='h5' value={summary.unrealizedPnL}>
+          {formatMoney(summary.unrealizedPnL)}
+        </ColoredNumber>
+        <Caption variant='caption'>% invested</Caption>
+        <ColoredNumber variant='h5' value={summary.unrealizedPnL}>
+          {formatPercent(summary.unrealizedPnLPercent)}
+        </ColoredNumber>
       </InfoBox>
       <InfoBox>
         <SumTitle variant='h5'> Realized PnL </SumTitle>
+        <Caption variant='caption'>total</Caption>
         <ColoredNumber variant='h5' value={summary.realizedPnL}>
           {summary.realizedPnL.formatMoney()}
         </ColoredNumber>
       </InfoBox>
-      <InfoBox noBorder>
-      <SumTitle variant='h5'> Combined PnL </SumTitle>
+      <InfoBox>
+        <SumTitle variant='h5'> Combined PnL </SumTitle>
+        <Caption variant='caption'>total</Caption>
         <ColoredNumber variant='h5' value={summary.combinedPnL}>
           {summary.combinedPnL.formatMoney()}
         </ColoredNumber>
+        <Caption variant='caption'>% invested</Caption>
         <ColoredNumber variant='h5' value={summary.combinedPnL}>
           {summary.combinedPnLPercent.formatPercent()}
         </ColoredNumber>
       </InfoBox>
 
-    </SummaryPaper>
+    </InfoContainer>
   );
 };
 

@@ -2,6 +2,10 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
+    systemCommand(command) {
+      ipcRenderer.send('systemCommand-m', command);
+    },
+
     importOperations() {
       ipcRenderer.send('import-m');
     },

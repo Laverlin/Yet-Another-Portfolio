@@ -58,7 +58,6 @@ const TablePaper = styled(Paper)`
   margin-bottom: 8px;
   margin-top: 2px;
   border: 0;
-  overflow-y: overlay;
 `;
 const HeaderCell = styled(TableCell)(({theme}) => ({
   backgroundColor: theme.palette.action.selected,
@@ -115,7 +114,7 @@ export const TickerDetails: FC = () => {
           <SvgPath path={CommonIcon.close} />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{overflowY: 'hidden'}}>
         <CardRow>
           <Card>
             <Typography variant='h6'>Positions</Typography>

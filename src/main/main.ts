@@ -19,6 +19,7 @@ import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 import { Dispatcher } from './Dispatcher';
 import { AppSetting, Setting } from './Storage/Settings';
+import { SystemCommand } from './entity/SystemCommand';
 
 export default class AppUpdater {
   constructor() {
@@ -82,6 +83,7 @@ const createWindow = async () => {
     height: height,
     minWidth: 1000,
     minHeight: 400,
+    frame: false,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -162,6 +164,24 @@ app.on('window-all-closed', () => {
     mainWindow?.webContents.send('actions-r', await dispatcher.getActionList(tickerId));
   });
 
+  ipcMain.on('systemCommand-m', (_, command: SystemCommand) => {
+    switch (command) {
+      case 'close':
+        app.quit();
+        break;
+      case 'minimize':
+        mainWindow?.minimize();
+        break;
+      case 'maximize':
+        mainWindow?.maximize();
+        break;
+      case 'restore':
+        mainWindow?.restore();
+        break;
+      default:
+        throw Error('unknown command');
+    }
+  })
 })();
 
 
