@@ -51,8 +51,9 @@ export class Database {
         exchange TEXT,
         type TEXT,
         marketPrice REAL,
+        logoImage TEXT DEFAULT(''),
         UNIQUE(symbol)
-      )`
+      );`
     );
     await database.execute(`
       CREATE TABLE IF NOT EXISTS action(
@@ -129,13 +130,14 @@ export class Database {
         ON rowCte.tickerId = avgCte.tickerId AND rowCte.rowId = avgCte.rowId + 1
     ),
         tickerCte (tickerId, symbol, description, industry, sector, customGroup, securityId, exchange, type, marketPrice,
-            actualPositions, purchaseValue, avgPrice, realizedPnL, marketValue, unrealizedPnL, unrealizedPnLPercent)
+            actualPositions, purchaseValue, avgPrice, realizedPnL, marketValue, unrealizedPnL, unrealizedPnLPercent, logoImage)
     AS (SELECT t.Id, t.symbol, t.description,
             ifnull(t.industry, ''), ifnull(t.sector, ''), ifnull(t.customGroup, ''), t.securityId, t.exchange,
             t.type, ifnull(t.marketPrice, 0), a.actualPositions, a.purchaseValue, a.avgPrice, a.realizedPnL,
             ifnull(a.actualPositions * t.marketPrice, 0) as marketValue,
             ifnull(a.actualPositions * t.marketPrice - a.purchaseValue, 0) as unrealizedPnL,
-            ifnull((a.actualPositions * t.marketPrice - a.purchaseValue) / a.purchaseValue * 100, 0) as unrealizedPnLPercent
+            ifnull((a.actualPositions * t.marketPrice - a.purchaseValue) / a.purchaseValue * 100, 0) as unrealizedPnLPercent,
+            t.logoImage
         FROM ticker t INNER JOIN avgCte a ON t.id = a.tickerId
         INNER JOIN
         (SELECT tickerId, max(rowId) maxRowId
@@ -147,7 +149,8 @@ export class Database {
         actualPositions, marketPrice, purchaseValue, avgPrice, marketValue, unrealizedPnL, unrealizedPnLPercent,
         realizedPnL + ifnull((SELECT SUM(amount) FROM Dividend d WHERE tickerCte.tickerId = d.tickerId), 0) as realizedPnL,
         ifnull(marketValue / (SELECT sum(marketValue) FROM tickerCte) * 100, 0) as portfolioPercent,
-        ifnull((SELECT SUM(amount) FROM Dividend d WHERE tickerCte.tickerId = d.tickerId), 0) as dividendAmount
+        ifnull((SELECT SUM(amount) FROM Dividend d WHERE tickerCte.tickerId = d.tickerId), 0) as dividendAmount,
+        logoImage
     FROM tickerCte
      `;
     return await this.execute<ITickerInfo[]>(query, true) as ITickerInfo[];
@@ -164,7 +167,8 @@ export class Database {
       UPDATE ticker SET
         description='${meta.companyName}',
         sector='${meta.sector}',
-        industry='${meta.industry}'
+        industry='${meta.industry}',
+        logoImage='${meta.logoImage}'
       WHERE symbol='${meta.symbol}'
     `;
     await this.execute(query);

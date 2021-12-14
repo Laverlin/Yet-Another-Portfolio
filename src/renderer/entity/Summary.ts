@@ -10,6 +10,8 @@ export default class Summary {
 
   realizedPnL = 0;
 
+  dividendAmount = 0;
+
   get combinedPnL(): number {
     return this.realizedPnL + this.unrealizedPnL;
   }

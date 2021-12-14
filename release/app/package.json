@@ -16,6 +16,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/sharp": "^0.29.4",
+    "sharp": "^0.29.3",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2"
   }

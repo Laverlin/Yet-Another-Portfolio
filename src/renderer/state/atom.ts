@@ -37,6 +37,7 @@ export const summarySelector = selector<Summary>({
     summary.invested += ticker.purchaseValue;
     summary.realizedPnL += ticker.realizedPnL;
     summary.unrealizedPnL += ticker.unrealizedPnL;
+    summary.dividendAmount += ticker.dividendAmount;
     return summary;
   }, new Summary())
 })
@@ -55,4 +56,9 @@ export const logDialogAtom = atom({
 export const tickerDetailStateAtom = atom<ITickerDetailState>({
   key: 'tickerDetailStateAtom',
   default: tickerDetailClose
+})
+
+export const groupFieldAtom = atom<keyof ITickerInfo | ''>({
+  key: 'groupFieldAtom',
+  default: ''
 })

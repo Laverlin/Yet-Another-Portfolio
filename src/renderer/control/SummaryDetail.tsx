@@ -86,6 +86,10 @@ export const SummaryDetail: FC = () => {
         <ColoredNumber variant='h5' value={summary.realizedPnL}>
           {summary.realizedPnL.formatMoney()}
         </ColoredNumber>
+        <Caption variant='caption'>dividend</Caption>
+        <NormalNumber variant='h5'>
+          {summary.dividendAmount.formatMoney()}
+        </NormalNumber>
       </InfoBox>
       <InfoBox>
         <SumTitle variant='h5'> Combined PnL </SumTitle>

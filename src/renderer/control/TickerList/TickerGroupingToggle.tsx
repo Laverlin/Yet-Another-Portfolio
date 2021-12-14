@@ -1,6 +1,7 @@
 import { styled, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { ITickerInfo } from "main/entity/ITickerInfo";
-import { FC, useState } from "react";
+import { FC, } from "react";
+import { useRecoilState } from "recoil";
+import { groupFieldAtom } from "renderer/state/atom";
 
 const GroupToggleButton = styled(ToggleButton)(({theme}) => ({
   fontWeight: 'bold',
@@ -20,7 +21,7 @@ const GroupingDiv = styled('div')(() => ({
 
 export const AssetGroupingToggle: FC = () => {
 
-  const [groupingState, setGroupingState] = useState('' as keyof ITickerInfo | '');
+  const [groupField, setGroupField] = useRecoilState(groupFieldAtom);
 
   return (
     <GroupingDiv>
@@ -30,9 +31,9 @@ export const AssetGroupingToggle: FC = () => {
 
       <ToggleButtonGroup
         color="primary"
-        value={groupingState}
+        value={groupField}
         exclusive
-        onChange = {(_, value) => setGroupingState(value)}
+        onChange = {(_, value) => setGroupField(value)}
       >
         <GroupToggleButton size='small' value='sector'>sector</GroupToggleButton>
         <GroupToggleButton size='small' value='industry'>industry</GroupToggleButton>

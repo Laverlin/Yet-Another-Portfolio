@@ -13,10 +13,10 @@ const CardRow = styled('div')(({theme}) => ({
   flexDirection: 'row',
   width: '100%',
   color: theme.palette.text.primary,
-  '& div:first-child': {
+  '& div:first-of-type': {
     marginLeft: '0px'
   },
-  '& div:last-child': {
+  '& div:last-of-type': {
     marginRight: '0px'
   }
 }));

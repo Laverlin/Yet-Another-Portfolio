@@ -1,6 +1,7 @@
 import { IPriceQuote } from "main/entity/IPriceQuote";
 import { ITickerInfo } from "main/entity/ITickerInfo";
 import { ITickerMetadata } from "main/entity/ITickerMetadata";
+import sharp from 'Sharp';
 
 const apiRequest = async <T>(url: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(url, options);
@@ -41,6 +42,9 @@ export async function* getTickersMetadata(tickers: ITickerInfo[], apiKey: string
     const url = `https://financialmodelingprep.com/api/v3/profile/${ticker.symbol}?apikey=${apiKey}`
     const data = await apiRequest<ITickerMetadata[]>(url);
     if (data[0]) {
+      const image = await(await fetch(data[0].image)).arrayBuffer();
+      const scaled = await sharp(Buffer.from(image)).resize(32, 32, {fit:'inside'}).toBuffer()
+      data[0].logoImage = `data:image;base64,${scaled.toString('base64')}`
       yield data[0];
     }
   }

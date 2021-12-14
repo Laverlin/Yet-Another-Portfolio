@@ -18,4 +18,5 @@ export interface ITickerInfo {
   unrealizedPnLPercent: number;
   portfolioPercent: number;
   dividendAmount: number;
+  logoImage: string;
 }
