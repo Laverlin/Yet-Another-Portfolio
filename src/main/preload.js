@@ -42,6 +42,10 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.once('actions-r', (event, ...args) => func(...args));
     },
 
+    enterPin(pin) {
+      ipcRenderer.send('ibkrPin-m', pin);
+    },
+
 
     requestFile(filePath, contentType) {
       ipcRenderer.send('ipc-readFile', filePath, contentType);

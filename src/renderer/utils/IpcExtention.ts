@@ -1,7 +1,7 @@
 import { IActionItem } from "main/entity/IActoinItem";
-import { INotification } from "main/entity/INotification";
 import { ITickerInfo } from "main/entity/ITickerInfo";
 import {SystemCommand} from "main/entity/SystemCommand";
+import { INotification } from "main/NotifyManager";
 
 
 declare global {
@@ -25,6 +25,7 @@ export interface IpcRenderer {
   removePortfolioListeners() : void;
   loadActions(tickerId: number): void;
   onReceiveActions(func: (actions: IActionItem[]) => void): void;
+  enterPin(pin: string): void;
 
   /*
   requestFile(filePath: string, contentType: FileContentType): void;

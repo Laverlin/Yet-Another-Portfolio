@@ -38,7 +38,7 @@ export const LogViewer: FC = () => {
         <Grid container direction='column' >
           {logStorage.logRecords.map((logRecord, i) =>
             <Grid key={i} container direction='row'>
-              <Grid item xs={2}>{logRecord.vriant}</Grid>
+              <Grid item xs={2}>{logRecord.severity}</Grid>
               <Grid item xs={4}>{logRecord.time.toLocaleString()}</Grid>
               <Grid item xs={6}>{logRecord.message}</Grid>
             </Grid>

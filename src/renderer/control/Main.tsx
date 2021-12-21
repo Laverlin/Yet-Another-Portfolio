@@ -1,7 +1,7 @@
 import { } from '../utils/SystemExtentions';
 import { FC, useEffect, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { logDialogAtom, tickersAtom } from 'renderer/state/atom';
+import { logDialogAtom, pinDialogStateAtom, tickersAtom } from 'renderer/state/atom';
 import { SummaryDetail } from './SummaryDetail';
 
 import { SpeedDial, SpeedDialAction, SpeedDialIcon, styled,  } from '@mui/material';
@@ -15,6 +15,7 @@ import { logStorage } from 'renderer/entity/LogStorage';
 import { TickerDetails } from './TickerDetails';
 import { SystemButtons } from './SystemButtons';
 import { AssetList } from './TickerList/AssetList';
+import { IbkrPinDialog } from './IbkrPinDialog';
 
 
 const MenuDial = styled(SpeedDial)(() =>({
@@ -27,6 +28,7 @@ const MenuDial = styled(SpeedDial)(() =>({
 export const Main: FC = () => {
   const setTickers = useSetRecoilState(tickersAtom);
   const setLogViewState = useSetRecoilState(logDialogAtom);
+  const setIbkrPinDialog = useSetRecoilState(pinDialogStateAtom);
 
   const { enqueueSnackbar } = useSnackbar();
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -34,7 +36,7 @@ export const Main: FC = () => {
   useEffect(() => {
     window.electron.ipcRenderer.onReceiveNotification(m => {
       logStorage.add(m);
-      enqueueSnackbar(m.message, { variant: m.vriant });
+      enqueueSnackbar(m.message, { variant: m.severity });
     });
 
     window.electron.ipcRenderer.onReceivePortfolio(tickers => {
@@ -58,6 +60,7 @@ export const Main: FC = () => {
   const importOperations = () => {
     //setIsLoading(true);
     window.electron.ipcRenderer.importOperations();
+    setIbkrPinDialog(true);
   }
 
   const actions = [
@@ -99,6 +102,9 @@ export const Main: FC = () => {
 
 
       <TickerDetails />
+
+      <IbkrPinDialog/>
+
     </div>
   );
 };

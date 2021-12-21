@@ -13,13 +13,19 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
 import fs from 'fs';
-import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
-import { Dispatcher } from './Dispatcher';
-import { AppSetting, Setting } from './Storage/Settings';
+import { Dispatcher } from './dataProvider/Dispatcher';
+import { PortfolioAppSetting, Setting } from './Storage/Settings';
 import { SystemCommand } from './entity/SystemCommand';
+import { TinkoffDataProvider } from './dataProvider/TinkoffDataProvider';
+import { FinancialModelingProvider } from './dataProvider/FinancialModelingProvider';
+import { TradierComProvider } from './dataProvider/TradierComProvider';
+import { AlphaVantageProvider } from './dataProvider/AlphaVantageProvider';
+import { IbkrDataProvider } from './dataProvider/IbkrDataProvider';
+import { NotifyManager } from './NotifyManager';
 
 export default class AppUpdater {
   constructor() {
@@ -56,7 +62,7 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const appSetting = Setting.load(AppSetting);
+const appSetting = Setting.load(PortfolioAppSetting);
 
 const createWindow = async () => {
   if (isDevelopment) {
@@ -139,25 +145,33 @@ app.on('window-all-closed', () => {
     if (mainWindow === null) await createWindow();
   });
 
-  const dispatcher = await Dispatcher.CreateInstance(mainWindow!.webContents, appSetting);
+  const notifyManager = new NotifyManager(mainWindow!.webContents);
+  const dispatcher = await Dispatcher.CreateInstance(notifyManager, appSetting.dbFilePath);
+  dispatcher.addDataProvider(
+    new IbkrDataProvider(ipcMain, appSetting.ibkrSetting, appSetting.appFolder, notifyManager)
+  );
+  dispatcher.addDataProvider(new TinkoffDataProvider(appSetting.tinkoffAPIKey));
+  dispatcher.addDataProvider(new FinancialModelingProvider(appSetting.financialmodelingKey));
+  dispatcher.addDataProvider(new TradierComProvider(appSetting.tradierKey));
+  dispatcher.addDataProvider(new AlphaVantageProvider(appSetting.alphavantageKey));
 
   ipcMain.on('import-m', async (_event ) => {
-    const files = dialog.showOpenDialogSync({properties: ['openFile']});
-    await dispatcher.importProfiles(files);
+    //const files = dialog.showOpenDialogSync({properties: ['openFile']});
+    await dispatcher.importOperations();
     await dispatcher.updateActualPrice();
     mainWindow?.webContents.send('portfolio-r', await dispatcher.getPortfolio());
-    dispatcher.sendNotification('Import is done.');
+    notifyManager.send('Import is done.');
   });
 
   ipcMain.on('refresh-m', async (_event ) => {
     await dispatcher.updateActualPrice();
     mainWindow?.webContents.send('portfolio-r', await dispatcher.getPortfolio());
-    dispatcher.sendNotification('Market value update is done.');
+    notifyManager.send('Market value update is done.');
   });
 
   ipcMain.on('load-m', async (_event ) => {
     mainWindow?.webContents.send('portfolio-r', await dispatcher.getPortfolio());
-    dispatcher.sendNotification('Portfolio Loaded');
+    notifyManager.send('Portfolio Loaded');
   });
 
   ipcMain.on('loadActions-m', async (_, tickerId: number) =>{

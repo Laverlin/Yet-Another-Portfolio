@@ -1,5 +1,5 @@
-import { INotification } from 'main/entity/INotification';
 import { ITickerInfo } from 'main/entity/ITickerInfo';
+import { INotification } from 'main/NotifyManager';
 import { atom, DefaultValue, selector } from 'recoil'; // eslint-disable-line
 import Summary from 'renderer/entity/Summary';
 import { ITickerDetailState, tickerDetailClose } from './ITickerDetailState';
@@ -61,4 +61,9 @@ export const tickerDetailStateAtom = atom<ITickerDetailState>({
 export const groupFieldAtom = atom<keyof ITickerInfo | ''>({
   key: 'groupFieldAtom',
   default: ''
+})
+
+export const pinDialogStateAtom = atom<boolean>({
+  key: 'pinDialogStateAtom',
+  default: false
 })

@@ -1,10 +1,10 @@
-import { INotification } from "main/entity/INotification";
+import { INotification } from "main/NotifyManager";
 
 export class LogStorage {
   private _logStorage: INotification[] = [];
 
   add(newRecord: INotification) {
-    this._logStorage.unshift(newRecord);
+    this._logStorage.push(newRecord);
   }
 
   get logRecords(): INotification[] {

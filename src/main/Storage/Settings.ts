@@ -10,12 +10,12 @@ export class Setting {
   #filePath: string | undefined
 
   /** load setting data from file and return new entity of settings object
-   * if file not found then defauld objec returns
+   * if file not found then defauld object returns
    * @param settingType setting type object, must be derived from Setting
    */
   static load<T extends Setting>(settingType: new() => T): T {
     let setting = new settingType();
-    setting.#filePath = this.createPath(settingType.name + '.json');
+    setting.#filePath = setting.createPath(settingType.name + '.json');
 
     return fs.existsSync(setting.#filePath)
       ? Object.assign(setting, JSON.parse(fs.readFileSync(setting.#filePath, 'utf-8')))
@@ -31,18 +31,30 @@ export class Setting {
     fs.writeFileSync(this.#filePath, JSON.stringify(this));
   }
 
-  static createPath(fileName: string) {
-    const userDataPath = electron.app.getPath('userData');
-    console.log(userDataPath);
+  createPath(fileName: string) {
+    const userDataPath = this.appFolder;
     return path.join(userDataPath, fileName);
+  }
+
+  /**
+   * returns application folder
+   */
+  get appFolder(): string {
+    return electron.app.getPath('userData');
   }
 }
 
-export class AppSetting extends Setting {
+export class IbkrSetting {
+  login: string = '';
+  password: string = '';
+}
+
+export class PortfolioAppSetting extends Setting {
   constructor() {
     super();
-    this.dbFilePath = Setting.createPath('tickers.db');
+    this.dbFilePath = this.createPath('tickers.db');
   }
+
   windowSize: Rectangle = {
     width: 1450,
     height: 800,
@@ -54,4 +66,5 @@ export class AppSetting extends Setting {
   alphavantageKey: string = '';
   tradierKey: string = '';
   financialmodelingKey: string = '';
+  ibkrSetting = new IbkrSetting();
 }
