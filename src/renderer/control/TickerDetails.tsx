@@ -71,6 +71,13 @@ const ScrollContainer = styled(TableContainer)`
   min-width: 800px;
   max-height: 400px;
 `;
+const CloseButton = styled(IconButton)(({theme}) => ({
+  WebkitAppRegion:'no-drag',
+  position: 'absolute',
+  right: 8,
+  top: 8,
+  color: theme.palette.grey[500],
+}));
 
 export const TickerDetails: FC = () => {
   const [tickerDetailState, setTickerDetailState] = useRecoilState(tickerDetailStateAtom);
@@ -102,17 +109,11 @@ export const TickerDetails: FC = () => {
         <Typography variant='body1' component='span'>
           &nbsp;{tickerInfo.description}
         </Typography>
-        <IconButton
+        <CloseButton
           onClick={() => setTickerDetailState(tickerDetailClose)}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
         >
           <SvgPath path={CommonIcon.close} />
-        </IconButton>
+        </CloseButton>
       </DialogTitle>
       <DialogContent sx={{overflowY: 'hidden'}}>
         <CardRow>

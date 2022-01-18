@@ -26,6 +26,10 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.on('portfolio-r', (event, ...args) => func(...args));
     },
 
+    onReceiveLivePrice(func) {
+      ipcRenderer.on('livePrice-r', (event, ...args) => func(...args));
+    },
+
     onReceiveNotification(func) {
       ipcRenderer.on('notification-r', (event, ...args) => func(...args));
     },

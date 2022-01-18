@@ -41,6 +41,8 @@ export class TinkoffDataProvider implements IDataProvider {
       if (!op.figi || op.status !== 'Done' || op.currency !== 'USD')
         continue;
 
+//      console.log(op);
+
       // add new Ticker in tickers
       //
       if (this._allOperations.includes(op.operationType || '')) {
@@ -51,6 +53,7 @@ export class TinkoffDataProvider implements IDataProvider {
                 symbol: position!.ticker || '',
                 type: position!.type,
                 securityId: position!.isin || '',
+                ibkrContractId: '',
                 description: '',
                 exchange: '',
                 figi: op.figi,
@@ -63,24 +66,28 @@ export class TinkoffDataProvider implements IDataProvider {
       //
       if (this._operationsTrade.includes(op.operationType || '')) {
         const quantity = op.operationType === 'Sell' ? -op.quantityExecuted! : op.quantityExecuted;
-        actions.push({
+        const action = {
           symbol: tickers.find(t => t.figi === op.figi)!.symbol,
           time: new Date(op.date),
           price: op.price || 0,
           positions: quantity || 0,
           fee: op.commission?.value || 0
-        });
+        }
+        actions.push(action);
+//        console.log(action);
       }
 
       // add new dividend in dividends
       //
       if (this._operationsDividend.includes(op.operationType || '')) {
-        dividends.push({
+        const dividend = {
           symbol: tickers.find(t => t.figi === op.figi)!.symbol,
           time: new Date(op.date),
           amount: op.payment || 0,
           description: op.operationType || ''
-        });
+        };
+        dividends.push(dividend);
+//        console.log(dividend);
       }
 
     }

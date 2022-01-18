@@ -1,32 +1,42 @@
-
 import { Database } from '../Storage/Database';
 import { IDataProvider } from './IDataProvider';
 import { NotifyManager } from 'main/NotifyManager';
+import { ITickerInfo } from 'main/entity/ITickerInfo';
+import { TvWebSocketClient } from './TvWebSocketClient';
+import { ILivePrice } from 'main/entity/ILivePrice';
 
 export class Dispatcher {
 
   private _notifyManager: NotifyManager;
   private _db: Database;
   private _dataProviders: IDataProvider[] = [];
+  private _tvWebSocketClient: TvWebSocketClient;
+  private _onNotifyLivePrice: (livePrice: ILivePrice) => void;
 
-  private constructor(notifyManager: NotifyManager, db: Database) {
+  private constructor(
+    notifyManager: NotifyManager,
+    db: Database,
+    onNotifyLivePrice: (livePrice: ILivePrice) => void
+  ) {
+    this.livePriceHandler = this.livePriceHandler.bind(this);
     this._notifyManager = notifyManager;
     this._db = db;
+    this._onNotifyLivePrice = onNotifyLivePrice;
+    this._tvWebSocketClient = new TvWebSocketClient(this.livePriceHandler);
   }
 
   static async CreateInstance(
     notifyManager: NotifyManager,
-    dbFilePath: string
+    dbFilePath: string,
+    onNotifyLivePrice: (livePrice: ILivePrice) => void
   ): Promise<Dispatcher> {
     const db = await Database.initialize(dbFilePath);
-    return  new Dispatcher(notifyManager, db);
+    return  new Dispatcher(notifyManager, db, onNotifyLivePrice);
   }
 
   addDataProvider(provider: IDataProvider) {
     this._dataProviders.push(provider);
   }
-
-
 
   async importOperations() {
     try {
@@ -61,7 +71,6 @@ export class Dispatcher {
     catch (error) {
       this.handleError(error, 'import metadata');
     }
-
   }
 
   async updateActualPrice() {
@@ -72,7 +81,7 @@ export class Dispatcher {
       for (const provider of this._dataProviders) {
         const priceQuotes = await provider.getActualPrice(tickerInfos);
         for(const price of priceQuotes)
-          await this._db.setActualPrice(price);
+          await this._db.setActualPrice(price.price, price.symbol);
           this._notifyManager.send(`Price for ${priceQuotes.length} from ${provider.providerName} updated`);
       }
     }
@@ -87,6 +96,17 @@ export class Dispatcher {
 
   async getActionList(tickerId: number) {
     return await this._db.getActionList(tickerId);
+  }
+
+  subscribeOnLivePrice(tickers: ITickerInfo[]) {
+    tickers
+      .filter(ticker => ticker.actualPositions > 0)
+      .forEach(ticker => this._tvWebSocketClient.subscribeOnTicker(ticker));
+  }
+
+  private async livePriceHandler(livePrice: ILivePrice) {
+    await this._db.setActualPrice(livePrice.lastPrice, livePrice.symbol);
+    this._onNotifyLivePrice(livePrice);
   }
 
   private handleError(error: unknown, where: string) {

@@ -4,6 +4,7 @@ export interface ITickerInfo {
   sector: string;
   industry: string;
   customGroup: string;
+  ibkrContractId: string;
   securityId: string;
   description: string;
   exchange: string;

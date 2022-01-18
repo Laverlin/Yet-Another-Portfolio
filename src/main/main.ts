@@ -146,7 +146,11 @@ app.on('window-all-closed', () => {
   });
 
   const notifyManager = new NotifyManager(mainWindow!.webContents);
-  const dispatcher = await Dispatcher.CreateInstance(notifyManager, appSetting.dbFilePath);
+  const dispatcher = await Dispatcher.CreateInstance(
+    notifyManager,
+    appSetting.dbFilePath,
+    livePrice => mainWindow?.webContents.send('livePrice-r', livePrice)
+  );
   dispatcher.addDataProvider(
     new IbkrDataProvider(ipcMain, appSetting.ibkrSetting, appSetting.appFolder, notifyManager)
   );
@@ -156,7 +160,6 @@ app.on('window-all-closed', () => {
   dispatcher.addDataProvider(new AlphaVantageProvider(appSetting.alphavantageKey));
 
   ipcMain.on('import-m', async (_event ) => {
-    //const files = dialog.showOpenDialogSync({properties: ['openFile']});
     await dispatcher.importOperations();
     await dispatcher.updateActualPrice();
     mainWindow?.webContents.send('portfolio-r', await dispatcher.getPortfolio());
@@ -165,12 +168,15 @@ app.on('window-all-closed', () => {
 
   ipcMain.on('refresh-m', async (_event ) => {
     await dispatcher.updateActualPrice();
-    mainWindow?.webContents.send('portfolio-r', await dispatcher.getPortfolio());
+    const tickers = await dispatcher.getPortfolio();
+    mainWindow?.webContents.send('portfolio-r', tickers);
     notifyManager.send('Market value update is done.');
   });
 
   ipcMain.on('load-m', async (_event ) => {
-    mainWindow?.webContents.send('portfolio-r', await dispatcher.getPortfolio());
+    const tickers = await dispatcher.getPortfolio();
+    mainWindow?.webContents.send('portfolio-r', tickers);
+    dispatcher.subscribeOnLivePrice(tickers);
     notifyManager.send('Portfolio Loaded');
   });
 

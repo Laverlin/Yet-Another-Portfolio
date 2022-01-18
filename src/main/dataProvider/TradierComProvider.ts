@@ -44,5 +44,4 @@ export class TradierComProvider implements IDataProvider {
     });
     return data.quotes.quote.map(q => {return {symbol: q.symbol, price: q.last} as IPriceQuote});
   }
-
 }

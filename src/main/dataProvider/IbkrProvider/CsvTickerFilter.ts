@@ -18,6 +18,7 @@ export class CsvTickerFilter extends Transform {
             const ticker: ITicker = {
               symbol: raw[3],
               description: raw[4],
+              ibkrContractId: raw[5],
               securityId: raw[6],
               exchange: raw[7],
               type: raw[9]

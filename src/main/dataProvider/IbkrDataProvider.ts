@@ -135,7 +135,7 @@ export class IbkrDataProvider implements IDataProvider {
     await page.waitForSelector('input[name=fromDate]');
     await page.focus('input[name=fromDate]');
     await page.waitForTimeout(500);
-    for(let i=0; i<10; i++)
+    for(let i=0; i<20; i++)
         await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('Enter');
     await page.select(`select[ng-change='ctrl.formatChange()']`, 'string:13');

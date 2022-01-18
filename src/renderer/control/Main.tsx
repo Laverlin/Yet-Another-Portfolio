@@ -1,7 +1,7 @@
 import { } from '../utils/SystemExtentions';
 import { FC, useEffect, useState } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { logDialogAtom, pinDialogStateAtom, tickersAtom } from 'renderer/state/atom';
+import { useRecoilCallback, useSetRecoilState } from 'recoil';
+import { livePriceAtom, logDialogAtom, pinDialogStateAtom, tickerAtom, tickerIdsAtom } from 'renderer/state/atom';
 import { SummaryDetail } from './SummaryDetail';
 
 import { SpeedDial, SpeedDialAction, SpeedDialIcon, styled,  } from '@mui/material';
@@ -16,6 +16,8 @@ import { TickerDetails } from './TickerDetails';
 import { SystemButtons } from './SystemButtons';
 import { AssetList } from './TickerList/AssetList';
 import { IbkrPinDialog } from './IbkrPinDialog';
+import { ITickerInfo } from 'main/entity/ITickerInfo';
+import { ILivePrice } from 'main/entity/ILivePrice';
 
 
 const MenuDial = styled(SpeedDial)(() =>({
@@ -26,7 +28,18 @@ const MenuDial = styled(SpeedDial)(() =>({
 }));
 
 export const Main: FC = () => {
-  const setTickers = useSetRecoilState(tickersAtom);
+  const setTickerIds = useSetRecoilState(tickerIdsAtom);
+  const setTicker = useRecoilCallback(({set}) => (ticker: ITickerInfo) => {
+    set(tickerAtom(ticker.tickerId), ticker);
+  });
+
+  const livePriceHandler = useRecoilCallback(({set}) => (livePrice: ILivePrice) => {
+    console.log('got update');
+    console.log(livePrice);
+    set(tickerAtom(livePrice.tickerId), cur => { return {...cur, marketPrice: livePrice.lastPrice}});
+    set(livePriceAtom(livePrice.tickerId), livePrice);
+  })
+
   const setLogViewState = useSetRecoilState(logDialogAtom);
   const setIbkrPinDialog = useSetRecoilState(pinDialogStateAtom);
 
@@ -40,9 +53,13 @@ export const Main: FC = () => {
     });
 
     window.electron.ipcRenderer.onReceivePortfolio(tickers => {
-      setTickers(tickers);
+      tickers.forEach(ticker => setTicker(ticker));
+      setTickerIds(tickers.map(t => t.tickerId));
       //setIsLoading(false);
     });
+
+
+    window.electron.ipcRenderer.onReceiveLivePrice(livePrice => livePriceHandler(livePrice));
 
     window.electron.ipcRenderer.loadPortfolio();
 
@@ -55,6 +72,7 @@ export const Main: FC = () => {
   const refresh = () => {
     //setIsLoading(true);
     window.electron.ipcRenderer.refreshPortfolio();
+    //ibkrSocket && ibkrSocket.subscribeOnTicker('265598');
   }
 
   const importOperations = () => {
@@ -97,9 +115,7 @@ export const Main: FC = () => {
 
       <AssetList />
 
-
       <LogViewer />
-
 
       <TickerDetails />
 

@@ -1,12 +1,11 @@
 import { styled, TableCell, TableRow, Typography } from "@mui/material";
-import { ITickerInfo } from "main/entity/ITickerInfo";
+import React from "react";
 import { FC } from "react";
-import { useSetRecoilState } from "recoil";
-import { tickerDetailStateAtom } from "renderer/state/atom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { livePriceAtom, tickerAtom, tickerDetailStateAtom, totalMarketValueSelector, unrealisedPnLPercentSelector, unrealisedPnLSelector } from "renderer/state/atom";
 import { CommonIcon } from "renderer/utils/CommonIcon";
 import { SvgPath } from "renderer/utils/SvgPath";
 import { Amount } from "./Amount";
-import { getComparator, Order } from "./Comparator";
 
 const Symbol = styled(Typography)(() => ({
   fontWeight: 'bold'
@@ -19,7 +18,6 @@ const Desctiption = styled(Typography)(() => ({
 })) as typeof Typography
 
 const TickerCell = styled(TableCell)(() => ({
-  width: '18%',
   paddingLeft: 0,
   userSelect: 'text',
   maxWidth: 0
@@ -27,6 +25,8 @@ const TickerCell = styled(TableCell)(() => ({
 
 const NumberCell = styled(TableCell)(() => ({
   userSelect: 'text',
+  paddingLeft: 0,
+  //paddingRight: 0
 }));
 
 const IconCell = styled('div')(() => ({
@@ -39,9 +39,17 @@ const IconCell = styled('div')(() => ({
 }));
 
 
-const TickerTableRow: FC<{ticker:ITickerInfo}> = ({ticker}) => {
+
+export const TickerTableRowNoMemo: FC<{tickerId: number}> = ({tickerId}) => {
 
   const setTickerDetailState = useSetRecoilState(tickerDetailStateAtom);
+  const ticker = useRecoilValue(tickerAtom(tickerId));
+  const marketValue = useRecoilValue(totalMarketValueSelector(tickerId));
+  const unrealizedPnL = useRecoilValue(unrealisedPnLSelector(tickerId));
+  const unrealizedPnLPercent = useRecoilValue(unrealisedPnLPercentSelector(tickerId));
+  const livePrice = useRecoilValue(livePriceAtom(tickerId));
+
+  console.log(`row : ${ticker.symbol}`);
 
   return(
     <TableRow
@@ -66,7 +74,25 @@ const TickerTableRow: FC<{ticker:ITickerInfo}> = ({ticker}) => {
           <Desctiption variant='caption' component='div'> {ticker.description}</Desctiption>
       </TickerCell>
 
-      <NumberCell align="center"><Amount bold>{ticker.actualPositions}</Amount></NumberCell>
+      <NumberCell align="center" ><Amount bold>{ticker.actualPositions}</Amount></NumberCell>
+
+      <NumberCell align="center">
+        {ticker.actualPositions > 0 && <>
+          <Amount bold colored={livePrice.dayChange}>
+            {(livePrice.dayChange * ticker.actualPositions).formatMoney()}
+          </Amount>
+          <Amount caption colored={livePrice.dayChangePercent}>
+            {livePrice.dayChangePercent.formatPercent()}
+          </Amount>
+        </>}
+      </NumberCell>
+
+      <NumberCell align="right">
+        {ticker.actualPositions > 0 && <>
+          <Amount bold>{marketValue.formatMoney()}</Amount>
+          <Amount caption>{ticker.marketPrice.formatMoney()}</Amount>
+        </>}
+      </NumberCell>
 
       <NumberCell align="right">
         {ticker.actualPositions > 0 && <>
@@ -77,15 +103,8 @@ const TickerTableRow: FC<{ticker:ITickerInfo}> = ({ticker}) => {
 
       <NumberCell align="right">
         {ticker.actualPositions > 0 && <>
-          <Amount bold>{ticker.marketValue.formatMoney()}</Amount>
-          <Amount caption>{ticker.marketPrice.formatMoney()}</Amount>
-        </>}
-      </NumberCell>
-
-      <NumberCell align="right">
-        {ticker.actualPositions > 0 && <>
-          <Amount bold colored={ticker.unrealizedPnL}>{ticker.unrealizedPnL.formatMoney()}</Amount>
-          <Amount caption colored={ticker.unrealizedPnL}>{ticker.unrealizedPnLPercent.formatPercent()}</Amount>
+          <Amount bold colored={unrealizedPnL}>{unrealizedPnL.formatMoney()}</Amount>
+          <Amount caption colored={unrealizedPnL}>{unrealizedPnLPercent.formatPercent()}</Amount>
         </>}
       </NumberCell>
 
@@ -102,15 +121,4 @@ const TickerTableRow: FC<{ticker:ITickerInfo}> = ({ticker}) => {
   )
 }
 
-
-export const tickerRowsRenderer = (
-  tickers: ITickerInfo[],
-  order: Order,
-  orderBy: keyof ITickerInfo
-) => {
-
-  return (
-    [...tickers].sort(getComparator(order, orderBy))
-      .map(ticker => <TickerTableRow key={ticker.tickerId} ticker={ticker} />)
-  )
-}
+export const TickerTableRow = React.memo(TickerTableRowNoMemo);

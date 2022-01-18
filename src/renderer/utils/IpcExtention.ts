@@ -1,4 +1,5 @@
 import { IActionItem } from "main/entity/IActoinItem";
+import { ILivePrice } from "main/entity/ILivePrice";
 import { ITickerInfo } from "main/entity/ITickerInfo";
 import {SystemCommand} from "main/entity/SystemCommand";
 import { INotification } from "main/NotifyManager";
@@ -20,6 +21,7 @@ export interface IpcRenderer {
   loadPortfolio(): void;
   refreshPortfolio(): void;
   onReceivePortfolio(func: (content: ITickerInfo[]) => void): void;
+  onReceiveLivePrice(func: (livePrice: ILivePrice) => void): void;
   onReceiveNotification(func: (notification: INotification) => void): void;
   removeNotificationListeners() : void;
   removePortfolioListeners() : void;

@@ -1,7 +1,7 @@
 import { styled, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { FC, } from "react";
 import { useRecoilState } from "recoil";
-import { groupFieldAtom } from "renderer/state/atom";
+import { groupFiledNameAtom } from "renderer/state/atom";
 
 const GroupToggleButton = styled(ToggleButton)(({theme}) => ({
   fontWeight: 'bold',
@@ -21,7 +21,7 @@ const GroupingDiv = styled('div')(() => ({
 
 export const AssetGroupingToggle: FC = () => {
 
-  const [groupField, setGroupField] = useRecoilState(groupFieldAtom);
+  const [groupField, setGroupField] = useRecoilState(groupFiledNameAtom);
 
   return (
     <GroupingDiv>

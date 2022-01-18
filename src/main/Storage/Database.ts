@@ -3,10 +3,10 @@ import { open } from 'sqlite'
 import { ITicker } from '../entity/ITicker';
 import { IAction } from '../entity/IAction';
 import { ITickerInfo } from '../entity/ITickerInfo';
-import { IPriceQuote } from 'main/entity/IPriceQuote';
 import { ITickerMetadata } from 'main/entity/ITickerMetadata';
 import { IDividend } from 'main/entity/IDividend';
 import { IActionItem } from 'main/entity/IActoinItem';
+
 
 export class Database {
   private dbFile: string;
@@ -48,6 +48,7 @@ export class Database {
         sector TEXT,
         customGroup TEXT,
         securityId TEXT,
+        ibkrContractId TEXT,
         exchange TEXT,
         type TEXT,
         marketPrice REAL,
@@ -81,8 +82,8 @@ export class Database {
 
   async insertTicker(ticker: ITicker) {
     const query = `
-      INSERT INTO ticker(symbol, description, securityId, exchange, type)
-      VALUES ('${ticker.symbol}', '${ticker.description}', '${ticker.securityId}', '${ticker.exchange}', '${ticker.type}')
+      INSERT INTO ticker(symbol, description, ibkrContractId, securityId, exchange, type)
+      VALUES ('${ticker.symbol}', '${ticker.description}', '${ticker.ibkrContractId}', '${ticker.securityId}', '${ticker.exchange}', '${ticker.type}')
       ON CONFLICT (symbol) DO NOTHING
     `;
     await this.execute(query);
@@ -130,14 +131,14 @@ export class Database {
         ON rowCte.tickerId = avgCte.tickerId AND rowCte.rowId = avgCte.rowId + 1
     ),
         tickerCte (tickerId, symbol, description, industry, sector, customGroup, securityId, exchange, type, marketPrice,
-            actualPositions, purchaseValue, avgPrice, realizedPnL, marketValue, unrealizedPnL, unrealizedPnLPercent, logoImage)
+            actualPositions, purchaseValue, avgPrice, realizedPnL, marketValue, unrealizedPnL, unrealizedPnLPercent, ibkrContractId, logoImage)
     AS (SELECT t.Id, t.symbol, t.description,
             ifnull(t.industry, ''), ifnull(t.sector, ''), ifnull(t.customGroup, ''), t.securityId, t.exchange,
             t.type, ifnull(t.marketPrice, 0), a.actualPositions, a.purchaseValue, a.avgPrice, a.realizedPnL,
             ifnull(a.actualPositions * t.marketPrice, 0) as marketValue,
             ifnull(a.actualPositions * t.marketPrice - a.purchaseValue, 0) as unrealizedPnL,
             ifnull((a.actualPositions * t.marketPrice - a.purchaseValue) / a.purchaseValue * 100, 0) as unrealizedPnLPercent,
-            t.logoImage
+            t.ibkrContractId, t.logoImage
         FROM ticker t INNER JOIN avgCte a ON t.id = a.tickerId
         INNER JOIN
         (SELECT tickerId, max(rowId) maxRowId
@@ -150,6 +151,7 @@ export class Database {
         realizedPnL + ifnull((SELECT SUM(amount) FROM Dividend d WHERE tickerCte.tickerId = d.tickerId), 0) as realizedPnL,
         ifnull(marketValue / (SELECT sum(marketValue) FROM tickerCte) * 100, 0) as portfolioPercent,
         ifnull((SELECT SUM(amount) FROM Dividend d WHERE tickerCte.tickerId = d.tickerId), 0) as dividendAmount,
+        ifnull(ibkrContractId, '') as ibkrContractId,
         logoImage
     FROM tickerCte
      `;
@@ -157,8 +159,8 @@ export class Database {
   }
 
 
-  async setActualPrice(quote: IPriceQuote) {
-    const query = `UPDATE ticker set marketPrice=${quote.price} WHERE symbol='${quote.symbol}'`;
+  async setActualPrice(price: number, symbol: string) {
+    const query = `UPDATE ticker set marketPrice=${price} WHERE symbol='${symbol}'`;
     await this.execute(query);
   }
 

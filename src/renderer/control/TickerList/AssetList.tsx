@@ -1,12 +1,11 @@
-import { Paper, styled, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography } from "@mui/material";
+import { Button, Paper, styled, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography } from "@mui/material";
 import { ITickerInfo } from "main/entity/ITickerInfo";
-import { FC, useState } from "react";
-import { useRecoilValue } from "recoil";
-import { groupFieldAtom, tickersAtom } from "renderer/state/atom";
+import { FC } from "react";
+import { useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import { groupFiledNameAtom, groupsSelector, orderByAtom, orderDirectionAtom, sortedTikerSelector, tickerAtom } from "renderer/state/atom";
+import { TickerGroupRow } from "./TickerGroupRow";
 import { AssetGroupingToggle } from "./TickerGroupingToggle";
-import { Order } from "./Comparator";
-import { groupTickersBy } from "./TickerGrouping";
-import { tickerRowsRenderer } from "./TickerRow";
+import { TickerTableRow } from "./TickerTableRow";
 
 const TablePaper = styled(Paper)(({theme}) =>({
   width: '100%',
@@ -31,9 +30,11 @@ const ScrollContainer = styled(TableContainer)`
 
 const HeaderCell = styled(TableCell)(({theme}) => ({
   backgroundColor: theme.palette.primary.main,
-  minWidth:'140px',
+  minWidth:'100px',
+  width:'100px',
   textAlign:'center',
   paddingRight:'0px',
+  paddingLeft:'12px',
 }));
 
 const ToggleHeaderCell = styled(HeaderCell)(() => ({
@@ -42,30 +43,42 @@ const ToggleHeaderCell = styled(HeaderCell)(() => ({
   width:'40px',
 }));
 
-const HeaderTextRow = styled('div')(() => ({
+const HeaderTextRow = styled(Typography)(() => ({
   display:'flex',
   justifyContent:'center',
   whiteSpace: 'nowrap',
   width:'100%',
-  fontWeight: 'bold',
   color: 'white',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
 }));
 
 
 
 export const AssetList: FC = () =>{
 
-  const tickers = useRecoilValue(tickersAtom);
-  const groupField = useRecoilValue(groupFieldAtom);
+  const tickerIds = useRecoilValue(sortedTikerSelector);
+  const groupFieldName = useRecoilValue(groupFiledNameAtom);
+  const groupList = useRecoilValue(groupsSelector);
 
-  const [order, setOrder] = useState<Order>('asc');
-  const [orderBy, setOrderBy] = useState<keyof ITickerInfo>('symbol');
+  const [orderDirection, setOrderDirection] = useRecoilState(orderDirectionAtom);
+  const [orderBy, setOrderBy] = useRecoilState(orderByAtom);
 
   const handleSort = (property: keyof ITickerInfo) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+    const isAsc = orderBy === property && orderDirection === 'asc';
+    setOrderDirection(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
+
+  const setValue = useSetRecoilState(tickerAtom(1));
+
+  const handleAction = () =>{
+    setValue(cur => {
+        let n = {...cur};
+        n.marketPrice += 1;
+        return n;
+      });
+  }
 
   const SortLabel: FC<{sortField: keyof ITickerInfo}> = ({sortField, children}) => {
     return(
@@ -75,7 +88,7 @@ export const AssetList: FC = () =>{
           '& .MuiTableSortLabel-icon': {color: 'white !important' },
         }}
         active={orderBy === sortField}
-        direction={orderBy === sortField ? order : 'asc'}
+        direction={orderBy === sortField ? orderDirection : 'asc'}
         onClick={() => handleSort(sortField)}
       >
         {children}
@@ -87,6 +100,7 @@ export const AssetList: FC = () =>{
     <TablePaper variant='outlined'>
       <TableTitle variant='h5'>
         Tickers
+        <Button onClick={handleAction} variant = 'contained'>Action</Button>
         <AssetGroupingToggle />
       </TableTitle>
       <ScrollContainer>
@@ -94,77 +108,87 @@ export const AssetList: FC = () =>{
           <TableHead>
             <TableRow>
 
-              <ToggleHeaderCell></ToggleHeaderCell>
-              <HeaderCell width='18%'>
+              <ToggleHeaderCell>&nbsp;</ToggleHeaderCell>
+              <HeaderCell sx={{width:'100%'}}>
                 <SortLabel sortField='symbol'>
-                  <HeaderTextRow>Ticker</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>Ticker</HeaderTextRow>
                 </SortLabel>
               </HeaderCell>
 
-              <HeaderCell>
+              <HeaderCell >
                 <SortLabel sortField='actualPositions'>
-                  <HeaderTextRow>Positions</HeaderTextRow>
-                </SortLabel>
-              </HeaderCell>
-
-              <HeaderCell>
-                <SortLabel sortField='purchaseValue'>
-                  <HeaderTextRow>Spent </HeaderTextRow>
-                </SortLabel>
-                <br />
-                <SortLabel sortField='avgPrice'>
-                  <HeaderTextRow>(total / per sh.)</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>Positions</HeaderTextRow>
                 </SortLabel>
               </HeaderCell>
 
               <HeaderCell>
                 <SortLabel sortField='marketValue'>
-                  <HeaderTextRow>Market</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>Day change</HeaderTextRow>
                 </SortLabel>
                 <br/>
                 <SortLabel sortField='marketPrice'>
-                  <HeaderTextRow>(total / per sh.)</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>(total / %)</HeaderTextRow>
+                </SortLabel>
+              </HeaderCell>
+
+              <HeaderCell>
+                <SortLabel sortField='marketValue'>
+                  <HeaderTextRow variant='caption'>Market</HeaderTextRow>
+                </SortLabel>
+                <br/>
+                <SortLabel sortField='marketPrice'>
+                  <HeaderTextRow variant='caption'>(total / per sh.)</HeaderTextRow>
+                </SortLabel>
+              </HeaderCell>
+
+              <HeaderCell>
+                <SortLabel sortField='purchaseValue'>
+                  <HeaderTextRow variant='caption'>Spent </HeaderTextRow>
+                </SortLabel>
+                <br />
+                <SortLabel sortField='avgPrice'>
+                  <HeaderTextRow variant='caption'>(total / per sh.)</HeaderTextRow>
                 </SortLabel>
               </HeaderCell>
 
               <HeaderCell>
                 <SortLabel sortField='unrealizedPnL'>
-                  <HeaderTextRow>Unrealized PnL</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>Unrealized PnL</HeaderTextRow>
                 </SortLabel>
                 <br />
                 <SortLabel sortField='unrealizedPnLPercent'>
-                  <HeaderTextRow>(total / % spent)</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>(total / % spent)</HeaderTextRow>
                 </SortLabel>
               </HeaderCell>
 
               <HeaderCell>
                 <SortLabel sortField='realizedPnL'>
-                  <HeaderTextRow>Realized PnL</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>Realized PnL</HeaderTextRow>
                 </SortLabel>
                 <br/>
                 <SortLabel sortField='dividendAmount'>
-                  <HeaderTextRow>(total / div)</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>(total / div)</HeaderTextRow>
                 </SortLabel>
               </HeaderCell>
 
               <HeaderCell>
                 <SortLabel sortField='portfolioPercent'>
-                  <HeaderTextRow>% Portfolio</HeaderTextRow>
+                  <HeaderTextRow variant='caption'>% Portfolio</HeaderTextRow>
                 </SortLabel>
               </HeaderCell>
 
             </TableRow>
           </TableHead>
-            {(groupField)
-              ? groupTickersBy(
-                  tickers,
-                  groupField,
-                  groupTickers => tickerRowsRenderer(groupTickers, order, orderBy)
-                )
-              : <TableBody>{tickerRowsRenderer(tickers, order, orderBy)}</TableBody>
+            {(groupFieldName)
+              ? groupList.map(groupSummary => <TickerGroupRow key={groupSummary.groupTitle} groupSummary={groupSummary} />)
+              : <TableBody>
+                  {tickerIds.map(tickerId => <TickerTableRow key={tickerId} tickerId={tickerId} />)}
+                </TableBody>
             }
          </Table>
       </ScrollContainer>
     </TablePaper>
   )
 }
+
+
